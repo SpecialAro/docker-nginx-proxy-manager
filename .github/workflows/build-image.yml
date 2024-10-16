@@ -5,12 +5,13 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DOCKER_IMAGE_NAME: jlesage/nginx-proxy-manager
-  PLATFORMS: linux/amd64,linux/386,linux/arm/v6,linux/arm/v7,linux/arm64/v8
+  DOCKER_IMAGE_NAME: specialaro/nginx-proxy-manager
+  # PLATFORMS: linux/amd64,linux/386,linux/arm/v6,linux/arm/v7,linux/arm64/v8
+  PLATFORMS: linux/amd64
 
 on:
   push:
-    branches: '*'
+    branches: 'master'
     tags:
       - v[0-9][0-9].[0-9][0-9].[0-9]+
       - v[0-9][0-9].[0-9][0-9].[0-9]+-pre.[0-9]+
@@ -115,7 +116,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           push: ${{ steps.prep.outputs.is_release == 'yes' }}
           provenance: false
@@ -143,17 +144,3 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
           repository: ${{ env.DOCKER_IMAGE_NAME }}
           readme-filepath: DOCKERHUB.md
-
-  notification:
-    name: Notification
-    needs: [ build ]
-    runs-on: ubuntu-20.04
-    if: ${{ always() && github.event_name != 'pull_request' }}
-
-    steps:
-      - name: Pushover notification
-        uses: desiderati/github-action-pushover@v1
-        with:
-          job-status: ${{ needs.build.result }}
-          pushover-api-token: ${{ secrets.PUSHOVER_API_TOKEN }}
-          pushover-user-key: ${{ secrets.PUSHOVER_USER_KEY }}
